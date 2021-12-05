@@ -1,83 +1,53 @@
 #include "monty.h"
-
-char *argtoint;
+stack_t *head = NULL;
 
 /**
- * split_str - splits a string into tokens
- * @buf: The character to print
- * Return: array of strings.
+ * main - Entry Point
+ * @argc: Number of command line arguments.
+ * @argv: An array containing the arguments.
+ * Return: Always Zero.
  */
-char **split_str(char *buf)
+int main(int argc, char **argv)
 {
-	char *token, **eachstr, *delim;
-	int count = 0;
-
-	delim = " \t\r\n\a";
-	eachstr = malloc(sizeof(*eachstr) * 100);
-	if (!eachstr)
-	{
-		fprintf(stderr, "Error: malloc failed\n");
-		exit(EXIT_FAILURE);
-	}
-
-	token = strtok(buf, delim);
-	while (token)
-	{
-		eachstr[count] = token;
-		token = strtok(NULL, delim);
-		count++;
-	}
-	eachstr[count] = NULL;
-
-	return (eachstr);
+	if (argc < 2 || argc > 2)
+		err(1);
+	open_file(argv[1]);
+	free_nodes();
+	return (0);
 }
-/**
- * main - main program
- * @argc: number of arguments
- * @argv: array of arguments
- *
- * Return: Always 0 (Success)
- */
-int main(int argc, char *argv[])
-{
-	FILE *fp;
-	char *filename, *line = NULL, **fileargs;
-	ssize_t linesize;
-	int linecount = 0;
-	size_t len = 0;
-	stack_t *h = NULL;
-	void (*func)(stack_t **, unsigned int line_number);
 
-	if (argc != 2)
+/**
+ * free_nodes - Frees nodes in the stack.
+ */
+void free_nodes(void)
+{
+	stack_t *tmp;
+
+	if (head == NULL)
+		return;
+
+	while (head != NULL)
 	{
-		fprintf(stderr, "USAGE: monty file\n");
-		exit(EXIT_FAILURE);
+		tmp = head;
+		head = head->next;
+		free(tmp);
 	}
-	else
-		filename = argv[1];
-	fp = fopen(filename, "r");
-	if (!fp)
-	{
-		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
-		exit(EXIT_FAILURE);
-	}
-	linesize = getline(&line, &len, fp);
-	while (linesize > 0)
-	{
-		linecount++;
-		fileargs = split_str(line);
-		func = get_func(fileargs[0]);
-		if (!func)
-		{
-			fprintf(stderr, "L%d: unknown instruction %s\n", linecount, fileargs[0]);
-			exit(EXIT_FAILURE);
-		}
-		if (fileargs[1])
-			argtoint = fileargs[1];
-		func(&h, linecount);
-		linesize = getline(&line, &len, fp);
-	}
-	free(line);
-	fclose(fp);
-	return (1);
+}
+
+/**
+ * create_node - Creates and populates a node.
+ * @n: Number to go inside the node.
+ * Return: Upon sucess a pointer to the node. Otherwise NULL.
+ */
+stack_t *create_node(int n)
+{
+	stack_t *node;
+
+	node = malloc(sizeof(stack_t));
+	if (node == NULL)
+		err(4);
+	node->next = NULL;
+	node->prev = NULL;
+	node->n = n;
+	return (node);
 }
