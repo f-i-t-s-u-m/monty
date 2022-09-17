@@ -1,90 +1,128 @@
-#ifndef __MONTY_H__
-#define __MONTY_H__
-
+#ifndef MONTY_H
+#define MONTY_H
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
-#define STACK 0
-#define QUEUE 1
-#define DELIMS " \n\t\a\b"
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
-/* GLOBAL OPCODE TOKENS */
-extern char **op_toks;
+/**
+ * enum Date_Format_Modes - The data format modes for this program.
+ * @DF_LIFO: The data format code for a LIFO structure (like a stack)
+ * @DF_FIFO: The data format code for a FIFO structure (like a queue)
+ */
+enum Date_Format_Modes
+{
+	/* The data format code for a LIFO structure (like a stack) */
+	DF_LIFO,
+	/* The data format code for a FIFO structure (like a queue) */
+	DF_FIFO
+};
 
 /**
  * struct stack_s - doubly linked list representation of a stack (or queue)
- * @n: integer
- * @prev: points to the previous element of the stack (or queue)
- * @next: points to the next element of the stack (or queue)
+ * @n: The integer stored at the node
+ * @prev: A pointer to the previous element of the stack (or queue)
+ * @next: A Pointer to the next element of the stack (or queue)
  *
  * Description: doubly linked list node structure
- * for stack, queues, LIFO, FIFO Holberton project
+ * for stack, queues, LIFO, FIFO
  */
 typedef struct stack_s
 {
+	/* The integer stored at the node */
 	int n;
+	/* A pointer to the previous element of the stack (or queue) */
 	struct stack_s *prev;
+	/* A Pointer to the next element of the stack (or queue) */
 	struct stack_s *next;
 } stack_t;
 
 /**
- * struct instruction_s - opcode and its function
- * @opcode: the opcode
- * @f: function to handle the opcode
+ * struct instruction_s - Represents an opcode and its function
+ * @opcode: The opcode name
+ * @f: The function to handle the opcode
  *
  * Description: opcode and its function
- * for stack, queues, LIFO, FIFO Holberton project
+ * for stack, queues, LIFO, FIFO
  */
 typedef struct instruction_s
 {
+	/* The opcode name */
 	char *opcode;
+	/* The function to handle the opcode */
 	void (*f)(stack_t **stack, unsigned int line_number);
 } instruction_t;
 
-/* PRIMARY INTERPRETER FUNCTIONS */
-void free_stack(stack_t **stack);
-int init_stack(stack_t **stack);
-int check_mode(stack_t *stack);
-void free_tokens(void);
-unsigned int token_arr_len(void);
-int run_monty(FILE *script_fd);
-void set_op_tok_error(int error_code);
+/* monty.c functions */
 
-/* OPCODE FUNCTIONS */
-void monty_push(stack_t **stack, unsigned int line_number);
-void monty_pall(stack_t **stack, unsigned int line_number);
-void monty_pint(stack_t **stack, unsigned int line_number);
-void monty_pop(stack_t **stack, unsigned int line_number);
-void monty_swap(stack_t **stack, unsigned int line_number);
-void monty_add(stack_t **stack, unsigned int line_number);
-void monty_nop(stack_t **stack, unsigned int line_number);
-void monty_sub(stack_t **stack, unsigned int line_number);
-void monty_div(stack_t **stack, unsigned int line_number);
-void monty_mul(stack_t **stack, unsigned int line_number);
-void monty_mod(stack_t **stack, unsigned int line_number);
-void monty_pchar(stack_t **stack, unsigned int line_number);
-void monty_pstr(stack_t **stack, unsigned int line_number);
-void monty_rotl(stack_t **stack, unsigned int line_number);
-void monty_rotr(stack_t **stack, unsigned int line_number);
-void monty_stack(stack_t **stack, unsigned int line_number);
-void monty_queue(stack_t **stack, unsigned int line_number);
+char *get_data_mode(void);
+char **get_lines(void);
+void exit_program(int status);
+void clean_up_program(void);
 
-/* CUSTOM STANDARD LIBRARY FUNCTIONS */
-char **strtow(char *str, char *delims);
-char *get_int(int n);
+/* Opcode handlers */
 
-/* ERROR MESSAGES & ERROR CODES */
-int usage_error(void);
-int malloc_error(void);
-int f_open_error(char *filename);
-int unknown_op_error(char *opcode, unsigned int line_number);
-int no_int_error(unsigned int line_number);
-int pop_error(unsigned int line_number);
-int pint_error(unsigned int line_number);
-int short_stack_error(unsigned int line_number, char *op);
-int div_error(unsigned int line_number);
-int pchar_error(unsigned int line_number, char *message);
+void mty_op_push(stack_t **stack, unsigned int line_number);
+void mty_op_pall(stack_t **stack, unsigned int line_number);
+void mty_op_pint(stack_t **stack, unsigned int line_number);
+void mty_op_pop(stack_t **stack, unsigned int line_number);
+void mty_op_swap(stack_t **stack, unsigned int line_number);
+void mty_op_add(stack_t **stack, unsigned int line_number);
+void mty_op_nop(stack_t **stack, unsigned int line_number);
+void mty_op_sub(stack_t **stack, unsigned int line_number);
+void mty_op_div(stack_t **stack, unsigned int line_number);
+void mty_op_mul(stack_t **stack, unsigned int line_number);
+void mty_op_mod(stack_t **stack, unsigned int line_number);
+void mty_op_pchar(stack_t **stack, unsigned int line_number);
+void mty_op_pstr(stack_t **stack, unsigned int line_number);
+void mty_op_rotl(stack_t **stack, unsigned int line_number);
+void mty_op_rotr(stack_t **stack, unsigned int line_number);
+void mty_op_stack(stack_t **stack, unsigned int line_number);
+void mty_op_queue(stack_t **stack, unsigned int line_number);
 
-#endif /* __MONTY_H__ */
+/* Reading helpers */
 
+char **read_file(char *path, int *lines_count);
+char *read_word(char *str, int *offset);
+
+/* Executor */
+
+instruction_t *get_opcode_handlers(void);
+void execute_line(char *line, int line_num, stack_t **stack_values);
+
+/* Stack helpers */
+
+void push(stack_t **stack, int n);
+int pop(stack_t **stack);
+void enqueue(stack_t **stack, int n);
+stack_t *get_top_element(stack_t **stack);
+stack_t *get_bottom_element(stack_t **stack);
+
+/* Memory helpers */
+
+void malloc_failure(char failed);
+void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
+void mem_set(char *str, int n, char c);
+
+/* String utilities */
+
+int str_len(const char *str);
+char *str_cat(char *left, char *right, char can_free);
+char **str_split(char *str, char c, int *len_out, char can_free);
+
+/* Data validators */
+
+char is_integer(char *str);
+char is_ascii_char(int c);
+char is_whitespace(char c);
+
+#endif
